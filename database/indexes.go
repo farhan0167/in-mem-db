@@ -10,7 +10,7 @@ type Index interface {
 	Delete(k string)
 	Search(k string) (int, error)
 	Init()
-	Build(structs []any, fieldName string) error
+	Build(structs any, fieldName string) error
 }
 
 type CollectionsIndex struct {
