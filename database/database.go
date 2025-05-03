@@ -7,8 +7,8 @@ import (
 
 type DB struct {
 	Tables      []Table
-	DBIndex     Collections
-	DBNameIndex Collections
+	DBIndex     CollectionsIndex
+	DBNameIndex CollectionsIndex
 }
 
 func (db *DB) GetTables() []Table {

@@ -13,15 +13,15 @@ type Index interface {
 	Build(structs []any, fieldName string) error
 }
 
-type Collections struct {
+type CollectionsIndex struct {
 	Index map[string]int
 }
 
-func (c *Collections) Init() {
+func (c *CollectionsIndex) Init() {
 	c.Index = make(map[string]int)
 }
 
-func (c *Collections) Add(k string, v any) error {
+func (c *CollectionsIndex) Add(k string, v any) error {
 	index, ok := v.(int)
 	if ok {
 		c.Index[k] = index
@@ -30,7 +30,7 @@ func (c *Collections) Add(k string, v any) error {
 	return fmt.Errorf("v is of type %T. int expected", v)
 }
 
-func (c *Collections) Search(k string) (int, error) {
+func (c *CollectionsIndex) Search(k string) (int, error) {
 	index, ok := c.Index[k]
 	if ok {
 		return index, nil
@@ -38,11 +38,11 @@ func (c *Collections) Search(k string) (int, error) {
 	return -1, fmt.Errorf("Key %v does not exist", k)
 }
 
-func (c *Collections) Delete(k string) {
+func (c *CollectionsIndex) Delete(k string) {
 	delete(c.Index, k)
 }
 
-func (c *Collections) Build(structs any, fieldName string) error {
+func (c *CollectionsIndex) Build(structs any, fieldName string) error {
 	iterable := reflect.ValueOf(structs)
 
 	if iterable.Kind() != reflect.Slice {
