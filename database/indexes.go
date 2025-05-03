@@ -8,7 +8,7 @@ import (
 type Index interface {
 	Add(k string, v any) error
 	Delete(k string)
-	Search(k string) (any, error)
+	Search(k string) (int, error)
 	Init()
 	Build(structs []any, fieldName string) error
 }
@@ -30,7 +30,7 @@ func (c *Collections) Add(k string, v any) error {
 	return fmt.Errorf("v is of type %T. int expected", v)
 }
 
-func (c *Collections) Search(k string) (any, error) {
+func (c *Collections) Search(k string) (int, error) {
 	index, ok := c.Index[k]
 	if ok {
 		return index, nil
