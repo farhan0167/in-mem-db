@@ -42,7 +42,7 @@ func (c *Collections) Delete(k string) {
 	delete(c.Index, k)
 }
 
-func (c *Collections) Build(structs []any, fieldName string) error {
+func (c *Collections) Build(structs any, fieldName string) error {
 	iterable := reflect.ValueOf(structs)
 
 	if iterable.Kind() != reflect.Slice {
