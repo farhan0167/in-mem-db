@@ -1,7 +1,8 @@
-package db
+package database
 
 import (
 	"fmt"
+	"slices"
 )
 
 type DB struct {
@@ -39,7 +40,7 @@ func (db *DB) GetTableById(Id string) (Table, error) {
 }
 
 func (db *DB) GetTableByName(Name string) (Table, error) {
-	index, ok := db.DBIndex[Name]
+	index, ok := db.DBNameIndex[Name]
 	if ok {
 		return db.Tables[index], nil
 	}
@@ -63,6 +64,24 @@ func (db *DB) AddTable(table Table) error {
 	db.Tables = append(db.Tables, table)
 	db.DBIndex[table.Id] = len(db.Tables) - 1
 	db.DBNameIndex[table.Name] = len(db.Tables) - 1
+
+	return nil
+}
+
+func (db *DB) DeleteTable(id string) error {
+	table_index, ok := db.DBIndex[id]
+	if ok != true {
+		return fmt.Errorf("No Table with id %v found", id)
+	}
+	table := db.Tables[table_index]
+	delete(db.DBIndex, id)
+	delete(db.DBNameIndex, table.Name)
+
+	db.Tables = slices.Delete(db.Tables, table_index, table_index+1)
+	for index, table := range db.Tables {
+		db.DBIndex[table.Id] = index
+		db.DBNameIndex[table.Name] = index
+	}
 
 	return nil
 }
