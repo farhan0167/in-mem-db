@@ -11,23 +11,6 @@ type DB struct {
 	DBNameIndex map[string]int
 }
 
-type Table struct {
-	Id    string
-	Name  string
-	Items []Item
-}
-
-type Item struct {
-	Key       string
-	Attribute []Attribute
-	Ttl       int
-}
-
-type Attribute struct {
-	Name  string
-	Value any
-}
-
 func (db *DB) GetTables() []Table {
 	return db.Tables
 }
@@ -84,4 +67,28 @@ func (db *DB) DeleteTable(id string) error {
 	}
 
 	return nil
+}
+
+type Table struct {
+	Id    string
+	Name  string
+	Items []Item
+	Index map[string]any
+}
+
+func (t *Table) GetItems() []Item {
+	return t.Items
+}
+
+func (t *Table) GetItemByKey(k string) (Item, error) {
+	return Item{}, nil
+}
+
+func (t *Table) AddItem(item Item) {
+	// If index is empty, create a new one
+	if t.Index == nil {
+		t.Index = make(map[string]any)
+	}
+	t.Items = append(t.Items, item)
+	t.Index[item.Key] = len(t.Items) - 1
 }
