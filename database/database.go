@@ -5,6 +5,10 @@ import (
 	"slices"
 )
 
+const (
+	ITEM_INDEX = "ItemsIndex"
+)
+
 type DB struct {
 	Tables      []Table
 	DBIndex     CollectionsIndex
@@ -48,6 +52,14 @@ func (db *DB) AddTable(table Table) error {
 		fmt.Errorf("Table with Id %v already exists", table.Id)
 	}
 
+	// Initialize Table's Items Index
+	table.Index = make(map[string]Index)
+
+	// Initialize a basic Items Index
+	table.Index[ITEM_INDEX] = &CollectionsIndex{
+		Index: make(map[string]int),
+	}
+
 	db.Tables = append(db.Tables, table)
 
 	db.DBIndex.Add(table.Id, len(db.Tables)-1)
@@ -62,8 +74,6 @@ func (db *DB) DeleteTable(id string) error {
 		return fmt.Errorf("No Table with id %v found", id)
 	}
 	table := db.Tables[table_index]
-	// delete(db.DBIndex, id)
-	// delete(db.DBNameIndex, table.Name)
 
 	db.DBIndex.Delete(id)
 	db.DBNameIndex.Delete(table.Name)
@@ -79,7 +89,7 @@ type Table struct {
 	Id    string
 	Name  string
 	Items []Item
-	Index map[string]any
+	Index map[string]Index
 }
 
 func (t *Table) GetItems() []Item {
@@ -87,14 +97,19 @@ func (t *Table) GetItems() []Item {
 }
 
 func (t *Table) GetItemByKey(k string) (Item, error) {
-	return Item{}, nil
+	index, err := t.Index[ITEM_INDEX].Search(k)
+	if err != nil {
+		return Item{}, fmt.Errorf("Item with key %v not found", k)
+	}
+	return t.Items[index], nil
 }
 
-func (t *Table) AddItem(item Item) {
-	// If index is empty, create a new one
-	if t.Index == nil {
-		t.Index = make(map[string]any)
+func (t *Table) AddItem(item Item) error {
+	_, err := t.Index[ITEM_INDEX].Search(item.Key)
+	if err == nil {
+		return fmt.Errorf("Item with key %v already exists", item.Key)
 	}
 	t.Items = append(t.Items, item)
-	t.Index[item.Key] = len(t.Items) - 1
+	t.Index[ITEM_INDEX].Add(item.Key, len(t.Items)-1)
+	return nil
 }
