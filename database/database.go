@@ -19,7 +19,6 @@ func (db *DB) GetTables() []Table {
 	return db.Tables
 }
 func (db *DB) GetTableById(Id string) (Table, error) {
-	//index, ok := db.DBIndex[Id]
 	index, err := db.DBIndex.Search(Id)
 	if err != nil {
 		return Table{}, fmt.Errorf("table with id %s not found", Id)
