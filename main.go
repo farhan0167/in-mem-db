@@ -8,45 +8,48 @@ import (
 func main() {
 	db := database.DB{}
 
-	err := db.AddTable(database.Table{
+	table := database.Table{
 		Id:   "123",
 		Name: "users",
-	})
+	}
+	//fmt.Println("Table pre db add", table)
+	err := db.AddTable(table)
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = db.AddTable(database.Table{
-		Id:   "124",
-		Name: "models",
-	})
+	//fmt.Println("table post db add", table)
+	table_db, _ := db.GetTableByName("users")
+	//fmt.Println("table_db returned by GetTableByName", table_db)
+	item := database.Item{
+		Key: "123",
+		Attribute: []database.Attribute{
+			{
+				Name:  "name",
+				Value: "Farhan",
+			},
+		},
+		Ttl: 3600,
+	}
+	item2 := database.Item{
+		Key: "1234",
+		Attribute: []database.Attribute{
+			{
+				Name:  "name",
+				Value: "Ishraq",
+			},
+		},
+		Ttl: 3600,
+	}
+	err = table_db.AddItem(item)
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = db.AddTable(database.Table{
-		Id:   "125",
-		Name: "clients",
-	})
+	err = table_db.AddItem(item2)
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = db.AddTable(database.Table{
-		Id:   "126",
-		Name: "tokens",
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("Tables: %v \n", db.GetTables())
-	fmt.Println(db.GetTableByName("clients"))
-	err = db.DeleteTable("124")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(db.GetTableByName("clients"))
-	// table, err := database.GetTable("users")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(table)
-	// }
+
+	//fmt.Println(table.GetItems())
+	fmt.Println(table_db.GetItemByKey("1234"))
+
 }
