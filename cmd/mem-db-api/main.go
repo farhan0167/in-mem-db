@@ -1,6 +1,7 @@
 package main
 
 import (
+	"farhan0167/mem-db/database"
 	"farhan0167/mem-db/server"
 	"log/slog"
 	"net/http"
@@ -12,7 +13,9 @@ func Run() error {
 		slog.NewTextHandler(os.Stdout, nil),
 	).With("app", "api")
 
-	http_hldr := server.NewServer(logger)
+	db := database.DB{}
+
+	http_hldr := server.NewServer(logger, &db)
 
 	svr := &http.Server{
 		Addr:    ":8080",
