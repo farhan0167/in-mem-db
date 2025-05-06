@@ -1,12 +1,12 @@
 package database
 
 type Item struct {
-	Key       string
-	Attribute []Attribute
-	Ttl       int
+	Key       string      `json:"key"`
+	Attribute []Attribute `json:"attribute"`
+	Ttl       int         `json:"ttl"`
 }
 
 type Attribute struct {
-	Name  string
-	Value any
+	Name  string `json:"name"`
+	Value any    `json:"value"`
 }
