@@ -2,7 +2,10 @@ package server
 
 import (
 	"farhan0167/mem-db/database"
+	"log"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func HandleGetTables(db *database.DB) http.Handler {
@@ -17,25 +20,37 @@ func HandleGetTables(db *database.DB) http.Handler {
 	})
 }
 
-func HandleGetTableById(db *database.DB) http.Handler {
+func HandleGetTable(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		table, err := db.GetTableById(id)
-		if err != nil {
-			encode(w, r, http.StatusNotFound, database.Table{})
+		table := &database.Table{}
+
+		query := r.URL.Query()
+		id := query.Get("id")
+		name := query.Get("name")
+
+		if id == "" && name == "" {
+			encode(w, r, http.StatusBadRequest, "id or name is required")
 			return
 		}
-		encode(w, r, http.StatusOK, table)
-	})
-}
 
-func HandleGetTableByName(db *database.DB) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		name := r.PathValue("name")
-		table, err := db.GetTableByName(name)
-		if err != nil {
-			encode(w, r, http.StatusNotFound, database.Table{})
+		if id != "" && name != "" {
+			encode(w, r, http.StatusBadRequest, "id and name cannot be used together")
 			return
+		}
+
+		var err error
+		if id != "" {
+			table, err = db.GetTableById(id)
+			if err != nil {
+				encode(w, r, http.StatusNotFound, database.Table{})
+				return
+			}
+		} else if name != "" {
+			table, err = db.GetTableByName(name)
+			if err != nil {
+				encode(w, r, http.StatusNotFound, database.Table{})
+				return
+			}
 		}
 		encode(w, r, http.StatusOK, table)
 	})
@@ -54,5 +69,56 @@ func HandleAddTable(db *database.DB) http.Handler {
 			return
 		}
 		encode(w, r, http.StatusCreated, "Table added successfully")
+	})
+}
+
+type AddItemRequest struct {
+	Table      string               `json:"name"`
+	Attributes []database.Attribute `json:"attributes"`
+}
+
+func HandleAddItem(db *database.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		request_body, err := decode[AddItemRequest](r)
+		if err != nil {
+			log.Println(err)
+			encode(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		table, err := db.GetTableByName(request_body.Table)
+		if err != nil {
+			log.Println(err)
+			encode(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		item := database.Item{
+			Key: uuid.NewString(),
+			Ttl: 3600,
+		}
+		item.Attribute = append(item.Attribute, request_body.Attributes...)
+		err = table.AddItem(item)
+		if err != nil {
+			encode(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		encode(w, r, http.StatusCreated, "Item added successfully")
+	})
+}
+
+func HandleGetItems(db *database.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		empty_items := []database.Item{}
+		query := r.URL.Query()
+		table_name := query.Get("table_name")
+		if table_name == "" {
+			encode(w, r, http.StatusBadRequest, "table name is required")
+			return
+		}
+		table, err := db.GetTableByName(table_name)
+		if err != nil {
+			encode(w, r, http.StatusNotFound, empty_items)
+			return
+		}
+		encode(w, r, http.StatusOK, table.Items)
 	})
 }
