@@ -18,20 +18,20 @@ type DB struct {
 func (db *DB) GetTables() []Table {
 	return db.Tables
 }
-func (db *DB) GetTableById(Id string) (Table, error) {
+func (db *DB) GetTableById(Id string) (*Table, error) {
 	index, err := db.DBIndex.Search(Id)
 	if err != nil {
-		return Table{}, fmt.Errorf("table with id %s not found", Id)
+		return &Table{}, fmt.Errorf("table with id %s not found", Id)
 	}
-	return db.Tables[index], nil
+	return &db.Tables[index], nil
 }
 
-func (db *DB) GetTableByName(Name string) (Table, error) {
+func (db *DB) GetTableByName(Name string) (*Table, error) {
 	index, err := db.DBNameIndex.Search(Name)
 	if err != nil {
-		return Table{}, fmt.Errorf("table with name %s not found", Name)
+		return &Table{}, fmt.Errorf("table with name %s not found", Name)
 	}
-	return db.Tables[index], nil
+	return &db.Tables[index], nil
 }
 
 func (db *DB) AddTable(table Table) error {
