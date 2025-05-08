@@ -72,9 +72,11 @@ func HandleAddTable(db *database.DB) http.Handler {
 	})
 }
 
+type Attributes map[string]any
+
 type AddItemRequest struct {
-	Table      string               `json:"name"`
-	Attributes []database.Attribute `json:"attributes"`
+	Table      string     `json:"name"`
+	Attributes Attributes `json:"attributes"`
 }
 
 func HandleAddItem(db *database.DB) http.Handler {
@@ -95,7 +97,12 @@ func HandleAddItem(db *database.DB) http.Handler {
 			Key: uuid.NewString(),
 			Ttl: 3600,
 		}
-		item.Attribute = append(item.Attribute, request_body.Attributes...)
+		for k, v := range request_body.Attributes {
+			item.Attribute = append(item.Attribute, database.Attribute{
+				Name:  k,
+				Value: v,
+			})
+		}
 		err = table.AddItem(item)
 		if err != nil {
 			encode(w, r, http.StatusInternalServerError, err)
@@ -105,9 +112,13 @@ func HandleAddItem(db *database.DB) http.Handler {
 	})
 }
 
+type GetTableItemsResponse struct {
+	Items []Attributes `json:"items"`
+}
+
 func HandleGetItems(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		empty_items := []database.Item{}
+		empty_items := make([]Attributes, 0)
 		query := r.URL.Query()
 		table_name := query.Get("table_name")
 		if table_name == "" {
@@ -119,6 +130,15 @@ func HandleGetItems(db *database.DB) http.Handler {
 			encode(w, r, http.StatusNotFound, empty_items)
 			return
 		}
-		encode(w, r, http.StatusOK, table.Items)
+		items := table.GetItems()
+		res := make([]Attributes, len(items))
+		for i, item := range items {
+			res[i] = make(Attributes)
+			for _, attr := range item.Attribute {
+				res[i]["key"] = item.Key
+				res[i][attr.Name] = attr.Value
+			}
+		}
+		encode(w, r, http.StatusOK, res)
 	})
 }
