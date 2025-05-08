@@ -43,12 +43,12 @@ func (db *DB) AddTable(table Table) error {
 	}
 
 	if table.Id == "" {
-		return fmt.Errorf("Table id is empty. Please set a table id.")
+		return fmt.Errorf("table id is empty. Please set a table id")
 	}
 
 	_, err := db.DBIndex.Search(table.Id)
-	if err != nil {
-		fmt.Errorf("Table with Id %v already exists", table.Id)
+	if err == nil {
+		return fmt.Errorf("table with Id %v already exists", table.Id)
 	}
 
 	// Initialize Table's Items Index
