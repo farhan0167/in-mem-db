@@ -3,6 +3,8 @@ package service
 import (
 	"farhan0167/mem-db/database"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type Table struct {
@@ -81,4 +83,24 @@ func GetItems(db *database.DB, table_name string) ([]Attributes, error) {
 		res = append(res, attr)
 	}
 	return res, nil
+}
+
+func AddItem(db *database.DB, table_name string, attributes Attributes) error {
+	table, err := db.GetTableByName(table_name)
+	if err != nil {
+		return err
+	}
+	item := database.Item{
+		Key: uuid.NewString(),
+		Ttl: 3600,
+	}
+	for k, v := range attributes {
+		item.Attribute = append(item.Attribute, database.Attribute{
+			Name:  k,
+			Value: v,
+		})
+	}
+	err = table.AddItem(item)
+
+	return err
 }
