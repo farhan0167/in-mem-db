@@ -3,10 +3,7 @@ package server
 import (
 	"farhan0167/mem-db/database"
 	"farhan0167/mem-db/service"
-	"log"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type MessageResponse struct {
@@ -77,29 +74,12 @@ func HandleAddItem(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request_body, err := decode[AddItemRequest](r)
 		if err != nil {
-			log.Println(err)
-			encode(w, r, http.StatusInternalServerError, err)
+			encode(w, r, http.StatusInternalServerError, ErrorMessageResponse{Error: err.Error()})
 			return
 		}
-		table, err := db.GetTableByName(request_body.Table)
+		err = service.AddItem(db, request_body.Table, request_body.Attributes)
 		if err != nil {
-			log.Println(err)
-			encode(w, r, http.StatusInternalServerError, err)
-			return
-		}
-		item := database.Item{
-			Key: uuid.NewString(),
-			Ttl: 3600,
-		}
-		for k, v := range request_body.Attributes {
-			item.Attribute = append(item.Attribute, database.Attribute{
-				Name:  k,
-				Value: v,
-			})
-		}
-		err = table.AddItem(item)
-		if err != nil {
-			encode(w, r, http.StatusInternalServerError, err)
+			encode(w, r, http.StatusInternalServerError, ErrorMessageResponse{Error: err.Error()})
 			return
 		}
 		encode(w, r, http.StatusCreated, MessageResponse{Message: "item added successfully"})
