@@ -28,12 +28,12 @@ func HandleGetTable(db *database.DB) http.Handler {
 		name := query.Get("name")
 
 		if id == "" && name == "" {
-			encode(w, r, http.StatusBadRequest, "id or name is required")
+			encode(w, r, http.StatusBadRequest, ErrorMessageResponse{Error: "id or name is required"})
 			return
 		}
 
 		if id != "" && name != "" {
-			encode(w, r, http.StatusBadRequest, "id and name cannot be used together")
+			encode(w, r, http.StatusBadRequest, ErrorMessageResponse{Error: "id and name cannot be used together"})
 			return
 		}
 
