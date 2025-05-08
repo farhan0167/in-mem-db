@@ -68,11 +68,9 @@ func HandleAddTable(db *database.DB) http.Handler {
 	})
 }
 
-type Attributes map[string]any
-
 type AddItemRequest struct {
-	Table      string     `json:"name"`
-	Attributes Attributes `json:"attributes"`
+	Table      string             `json:"name"`
+	Attributes service.Attributes `json:"attributes"`
 }
 
 func HandleAddItem(db *database.DB) http.Handler {
@@ -109,32 +107,23 @@ func HandleAddItem(db *database.DB) http.Handler {
 }
 
 type GetTableItemsResponse struct {
-	Items []Attributes `json:"items"`
+	Items []service.Attributes `json:"items"`
 }
 
 func HandleGetItems(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		empty_items := make([]Attributes, 0)
 		query := r.URL.Query()
 		table_name := query.Get("table_name")
 		if table_name == "" {
 			encode(w, r, http.StatusBadRequest, ErrorMessageResponse{Error: "table name is required"})
 			return
 		}
-		table, err := db.GetTableByName(table_name)
+		items, err := service.GetItems(db, table_name)
 		if err != nil {
-			encode(w, r, http.StatusNotFound, empty_items)
+			encode(w, r, http.StatusNotFound, ErrorMessageResponse{Error: err.Error()})
 			return
 		}
-		items := table.GetItems()
-		res := make([]Attributes, len(items))
-		for i, item := range items {
-			res[i] = make(Attributes)
-			for _, attr := range item.Attribute {
-				res[i]["key"] = item.Key
-				res[i][attr.Name] = attr.Value
-			}
-		}
-		encode(w, r, http.StatusOK, res)
+
+		encode(w, r, http.StatusOK, items)
 	})
 }

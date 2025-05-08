@@ -57,3 +57,28 @@ func GetTable(db *database.DB, options GetTableParams) (Table, error) {
 func AddTable(db *database.DB, table database.Table) error {
 	return db.AddTable(table)
 }
+
+func DeleteTable(db *database.DB, id string) error {
+	return db.DeleteTable(id)
+}
+
+type Attributes map[string]any
+
+func GetItems(db *database.DB, table_name string) ([]Attributes, error) {
+	res := make([]Attributes, 0)
+	table, err := db.GetTableByName(table_name)
+	if err != nil {
+		return res, fmt.Errorf("%v", err)
+	}
+
+	items := table.GetItems()
+	for _, item := range items {
+		attr := make(Attributes)
+		attr["key"] = item.Key
+		for _, a := range item.Attribute {
+			attr[a.Name] = a.Value
+		}
+		res = append(res, attr)
+	}
+	return res, nil
+}
