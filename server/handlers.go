@@ -2,28 +2,30 @@ package server
 
 import (
 	"farhan0167/mem-db/database"
+	"farhan0167/mem-db/service"
 	"log"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
+type ErrorMessageResponse struct {
+	Error string `json:"error"`
+}
+
 func HandleGetTables(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		empty_tables := []database.Table{}
-		tables := db.GetTables()
-		if tables == nil {
-			encode(w, r, http.StatusNotFound, empty_tables)
-			return
-		}
+		tables := service.GetTables(db)
 		encode(w, r, http.StatusOK, tables)
 	})
 }
 
 func HandleGetTable(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		table := &database.Table{}
-
 		query := r.URL.Query()
 		id := query.Get("id")
 		name := query.Get("name")
@@ -38,19 +40,13 @@ func HandleGetTable(db *database.DB) http.Handler {
 			return
 		}
 
-		var err error
-		if id != "" {
-			table, err = db.GetTableById(id)
-			if err != nil {
-				encode(w, r, http.StatusNotFound, database.Table{})
-				return
-			}
-		} else if name != "" {
-			table, err = db.GetTableByName(name)
-			if err != nil {
-				encode(w, r, http.StatusNotFound, database.Table{})
-				return
-			}
+		params := service.GetTableParams{
+			Id:   id,
+			Name: name,
+		}
+		table, err := service.GetTable(db, params)
+		if err != nil {
+			encode(w, r, http.StatusNotFound, ErrorMessageResponse{Error: err.Error()})
 		}
 		encode(w, r, http.StatusOK, table)
 	})
@@ -63,12 +59,12 @@ func HandleAddTable(db *database.DB) http.Handler {
 			encode(w, r, http.StatusBadRequest, err)
 			return
 		}
-		err = db.AddTable(table)
+		err = service.AddTable(db, table)
 		if err != nil {
-			encode(w, r, http.StatusBadRequest, err)
+			encode(w, r, http.StatusBadRequest, ErrorMessageResponse{Error: err.Error()})
 			return
 		}
-		encode(w, r, http.StatusCreated, "Table added successfully")
+		encode(w, r, http.StatusCreated, MessageResponse{Message: "table created"})
 	})
 }
 
@@ -108,7 +104,7 @@ func HandleAddItem(db *database.DB) http.Handler {
 			encode(w, r, http.StatusInternalServerError, err)
 			return
 		}
-		encode(w, r, http.StatusCreated, "Item added successfully")
+		encode(w, r, http.StatusCreated, MessageResponse{Message: "item added successfully"})
 	})
 }
 
@@ -122,7 +118,7 @@ func HandleGetItems(db *database.DB) http.Handler {
 		query := r.URL.Query()
 		table_name := query.Get("table_name")
 		if table_name == "" {
-			encode(w, r, http.StatusBadRequest, "table name is required")
+			encode(w, r, http.StatusBadRequest, ErrorMessageResponse{Error: "table name is required"})
 			return
 		}
 		table, err := db.GetTableByName(table_name)
