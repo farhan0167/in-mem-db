@@ -18,20 +18,20 @@ type DB struct {
 func (db *DB) GetTables() []Table {
 	return db.Tables
 }
-func (db *DB) GetTableById(Id string) (Table, error) {
+func (db *DB) GetTableById(Id string) (*Table, error) {
 	index, err := db.DBIndex.Search(Id)
 	if err != nil {
-		return Table{}, fmt.Errorf("table with id %s not found", Id)
+		return &Table{}, fmt.Errorf("table with id %s not found", Id)
 	}
-	return db.Tables[index], nil
+	return &db.Tables[index], nil
 }
 
-func (db *DB) GetTableByName(Name string) (Table, error) {
+func (db *DB) GetTableByName(Name string) (*Table, error) {
 	index, err := db.DBNameIndex.Search(Name)
 	if err != nil {
-		return Table{}, fmt.Errorf("table with name %s not found", Name)
+		return &Table{}, fmt.Errorf("table with name %s not found", Name)
 	}
-	return db.Tables[index], nil
+	return &db.Tables[index], nil
 }
 
 func (db *DB) AddTable(table Table) error {
@@ -43,19 +43,19 @@ func (db *DB) AddTable(table Table) error {
 	}
 
 	if table.Id == "" {
-		return fmt.Errorf("Table id is empty. Please set a table id.")
+		return fmt.Errorf("table id is empty. Please set a table id")
 	}
 
 	_, err := db.DBIndex.Search(table.Id)
-	if err != nil {
-		fmt.Errorf("Table with Id %v already exists", table.Id)
+	if err == nil {
+		return fmt.Errorf("table with Id %v already exists", table.Id)
 	}
 
 	// Initialize Table's Items Index
-	table.Index = make(map[string]Index)
+	table.index = make(map[string]Index)
 
 	// Initialize a basic Items Index
-	table.Index[ITEM_INDEX] = &CollectionsIndex{
+	table.index[ITEM_INDEX] = &CollectionsIndex{
 		Index: make(map[string]int),
 	}
 
@@ -85,10 +85,10 @@ func (db *DB) DeleteTable(id string) error {
 }
 
 type Table struct {
-	Id    string
-	Name  string
-	Items []Item
-	Index map[string]Index
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Items []Item `json:"items"`
+	index map[string]Index
 }
 
 func (t *Table) GetItems() []Item {
@@ -96,7 +96,7 @@ func (t *Table) GetItems() []Item {
 }
 
 func (t *Table) GetItemByKey(k string) (Item, error) {
-	index, err := t.Index[ITEM_INDEX].Search(k)
+	index, err := t.index[ITEM_INDEX].Search(k)
 	if err != nil {
 		return Item{}, fmt.Errorf("Item with key %v not found", k)
 	}
@@ -104,11 +104,11 @@ func (t *Table) GetItemByKey(k string) (Item, error) {
 }
 
 func (t *Table) AddItem(item Item) error {
-	_, err := t.Index[ITEM_INDEX].Search(item.Key)
+	_, err := t.index[ITEM_INDEX].Search(item.Key)
 	if err == nil {
 		return fmt.Errorf("Item with key %v already exists", item.Key)
 	}
 	t.Items = append(t.Items, item)
-	t.Index[ITEM_INDEX].Add(item.Key, len(t.Items)-1)
+	t.index[ITEM_INDEX].Add(item.Key, len(t.Items)-1)
 	return nil
 }
