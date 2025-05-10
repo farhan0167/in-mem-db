@@ -85,9 +85,9 @@ func (db *DB) DeleteTable(id string) error {
 }
 
 type Table struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Items []Item `json:"items"`
+	Id    string
+	Name  string
+	Items []Item
 	index map[string]Index
 }
 

@@ -49,12 +49,21 @@ func HandleGetTable(db *database.DB) http.Handler {
 	})
 }
 
+type AddTableRequest struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func HandleAddTable(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		table, err := decode[database.Table](r)
+		req, err := decode[AddTableRequest](r)
 		if err != nil {
 			encode(w, r, http.StatusBadRequest, err)
 			return
+		}
+		table := database.Table{
+			Id:   req.Id,
+			Name: req.Name,
 		}
 		err = service.AddTable(db, table)
 		if err != nil {
