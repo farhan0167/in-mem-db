@@ -35,7 +35,7 @@ func (c *CollectionsIndex) Search(k string) (int, error) {
 	if ok {
 		return index, nil
 	}
-	return -1, fmt.Errorf("Key %v does not exist", k)
+	return -1, fmt.Errorf("key %v does not exist", k)
 }
 
 func (c *CollectionsIndex) Delete(k string) {

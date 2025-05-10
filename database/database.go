@@ -70,7 +70,7 @@ func (db *DB) AddTable(table Table) error {
 func (db *DB) DeleteTable(id string) error {
 	table_index, err := db.DBIndex.Search(id)
 	if err != nil {
-		return fmt.Errorf("No Table with id %v found", id)
+		return fmt.Errorf("no Table with id %v found", id)
 	}
 	table := db.Tables[table_index]
 
