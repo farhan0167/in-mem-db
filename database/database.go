@@ -98,7 +98,7 @@ func (t *Table) GetItems() []Item {
 func (t *Table) GetItemByKey(k string) (Item, error) {
 	index, err := t.index[ITEM_INDEX].Search(k)
 	if err != nil {
-		return Item{}, fmt.Errorf("Item with key %v not found", k)
+		return Item{}, fmt.Errorf("item with key %v not found", k)
 	}
 	return t.Items[index], nil
 }
@@ -106,7 +106,7 @@ func (t *Table) GetItemByKey(k string) (Item, error) {
 func (t *Table) AddItem(item Item) error {
 	_, err := t.index[ITEM_INDEX].Search(item.Key)
 	if err == nil {
-		return fmt.Errorf("Item with key %v already exists", item.Key)
+		return fmt.Errorf("item with key %v already exists", item.Key)
 	}
 	t.Items = append(t.Items, item)
 	t.index[ITEM_INDEX].Add(item.Key, len(t.Items)-1)
